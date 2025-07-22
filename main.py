@@ -76,6 +76,8 @@ def get_candle_img(
 
     tk_img = ImageTk.PhotoImage(img)
 
+    matplotlib.pyplot.close()
+
     return tk_img
 
 import tkinter as tk
