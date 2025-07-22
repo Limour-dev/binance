@@ -114,7 +114,7 @@ def seconds_to_next_15min():
     else:
         next_time = now.replace(minute=next_minute, second=0, microsecond=0)
     delta = next_time - now
-    return int(delta.total_seconds()) + 1
+    return int(delta.total_seconds()) + 10
 
 df_15m = pd.read_parquet(fp_p('15m.pq'))
 df_30m = pd.read_parquet(fp_p('30m.pq'))
