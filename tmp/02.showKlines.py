@@ -39,7 +39,7 @@ for col in cols:
 fig, axes = mpf.plot(
     df.set_index('date'), datetime_format='%H',
     style=my_style,
-    figsize=(6.4, 5),
+    figsize=(6.41, 5.15),
     type='candle', volume=False,
     returnfig=True, block=True
 )
@@ -52,6 +52,7 @@ ax.set_ylabel('')
 # 设置主图 y 轴每 5 个单位一个刻度
 ax.yaxis.set_major_locator(mticker.MultipleLocator(10))
 
+ax.set_xlabel('15 minutes')
 # 设置 x 轴刻度数量
 ax.xaxis.set_major_locator(mdates.HourLocator(byhour=[0,24]))
 
@@ -68,11 +69,13 @@ img = Image.open(fig_buf)
 import tkinter as tk
 import ctypes
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 root = tk.Tk()
 root.title('K线图预测')
-root.geometry('1920x970+0+0')
+root.attributes("-topmost", True)
+w = root.winfo_screenwidth()
+h = root.winfo_screenheight()
+root.geometry(f'{w}x{h}')
 
 cv00 = tk.Label(root)
 cv00.grid(row=0, column=0, padx=0, pady=0)
@@ -88,15 +91,32 @@ cv11.grid(row=1, column=1, padx=0, pady=0)
 cv12 = tk.Label(root)
 cv12.grid(row=1, column=2, padx=0, pady=0)
 
-def flush_init():
-    tk_img = ImageTk.PhotoImage(img)
-    cv00.config(image=tk_img)
-    cv01.config(image=tk_img)
-    cv02.config(image=tk_img)
-    cv10.config(image=tk_img)
-    cv11.config(image=tk_img)
-    cv12.config(image=tk_img)
-    cv12.img = tk_img
+from datetime import datetime, timedelta
+def seconds_to_next_15min():
+    now = datetime.now()
+    # 计算当前分钟属于哪个15分钟段
+    next_minute = (now.minute // 15 + 1) * 15
+    if next_minute == 60:
+        # 跨小时
+        next_time = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    else:
+        next_time = now.replace(minute=next_minute, second=0, microsecond=0)
+    delta = next_time - now
+    return int(delta.total_seconds()) + 1
 
-root.after(50, flush_init)
+def flush():
+    try:
+        tk_img = ImageTk.PhotoImage(img)
+        cv00.config(image=tk_img)
+        cv01.config(image=tk_img)
+        cv02.config(image=tk_img)
+        cv10.config(image=tk_img)
+        cv11.config(image=tk_img)
+        cv12.config(image=tk_img)
+        cv12.img = tk_img
+    finally:
+        print(seconds_to_next_15min() / 60)
+        root.after(seconds_to_next_15min() * 1000, flush)
+
+root.after(50, flush)
 root.mainloop()
