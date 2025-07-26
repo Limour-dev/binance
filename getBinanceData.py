@@ -79,6 +79,7 @@ def update_df(df, t=None, t_factor=15):
     return clean_df_rm(sub_df, 1000 * 60 * t_factor - 1)
 
 if __name__ == '__main':
+
     # 15分钟K线
     df = get_klines(
         start_date = '2024-01-04',

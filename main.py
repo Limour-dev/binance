@@ -146,46 +146,49 @@ def update_all_df():
     if len(tmp):
         df_1w = pd.concat([df_1w, tmp], ignore_index=True)
 
+import requests
 def flush():
     try:
         update_all_df()
         cv00.tk_img = get_candle_img(
             df_15m,
-            limit=24, datetime_format='%H',
+            limit=76, datetime_format='%H',
             xlabel='15MINUTE',
             ylocator=mticker.MultipleLocator(10)
         )
         cv00.config(image=cv00.tk_img)
         cv01.tk_img = get_candle_img(
             df_30m,
-            limit=24, datetime_format='%H',
+            limit=76, datetime_format='%H',
             xlabel='30MINUTE'
         )
         cv01.config(image=cv01.tk_img)
         cv02.tk_img = get_candle_img(
             df_1h,
-            limit=24, datetime_format='%H',
+            limit=76, datetime_format='%H',
             xlabel='1HOUR'
         )
         cv02.config(image=cv02.tk_img)
         cv10.tk_img = get_candle_img(
             df_4h,
-            limit=24, datetime_format='%dd',
+            limit=76, datetime_format='%dd',
             xlabel='4HOUR'
         )
         cv10.config(image=cv10.tk_img)
         cv11.tk_img = get_candle_img(
             df_1d,
-            limit=30, datetime_format='%dd',
+            limit=60, datetime_format='%dd',
             xlabel='1DAY'
         )
         cv11.config(image=cv11.tk_img)
         cv12.tk_img = get_candle_img(
             df_1w,
-            limit=24, datetime_format='%mm',
+            limit=48, datetime_format='%mm',
             xlabel='1WEEK'
         )
         cv12.config(image=cv12.tk_img)
+    except requests.exceptions.SSLError:
+        root.after(3000, flush)
     finally:
         print(seconds_to_next_15min() / 60)
         root.after(seconds_to_next_15min() * 1000, flush)
