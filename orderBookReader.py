@@ -29,5 +29,34 @@ for name in os.listdir(fp_p('ob'))[:-1]:
                 print(name, '读取完毕')
                 break
 
-for obo in obs:
-    print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(obo.ts // 1000)), obo.price)
+# for obo in obs:
+#     print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(obo.ts // 1000)), obo.price)
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+date_rng = np.zeros(len(obs))
+price = np.zeros(len(obs))
+for i,obo in enumerate(obs):
+    date_rng[i] = obo.ts
+    price[i] = obo.price
+df = pd.DataFrame({'timestamp': date_rng, 'price': price})
+df['date'] = pd.to_datetime(df['timestamp'], utc=True, unit='ms').dt.tz_convert('Asia/Shanghai')
+df = df.drop('timestamp', axis=1)
+
+df.set_index('date', inplace=True)
+
+resampled = df['price'].resample('5min').agg([
+    lambda x: np.percentile(x, 75) if len(x) > 20 else np.nan,
+    lambda x: np.percentile(x, 25) if len(x) > 20 else np.nan
+]).dropna(how='all')
+
+resampled.columns = ['Q75', 'Q25']
+
+plt.figure(figsize=(12, 6))
+plt.plot(resampled.index, resampled['Q75'], label='Q75')
+plt.plot(resampled.index, resampled['Q25'], label='Q25')
+plt.fill_between(resampled.index, resampled['Q25'], resampled['Q75'], color='gray', alpha=0.2)
+plt.xticks(rotation=45)
+plt.show(block=True)
