@@ -18,17 +18,20 @@ proxies = {
     'https': 'http://127.0.0.1:7890'
 }
 _client = Client(requests_params={'proxies': proxies})
-def client(max_retries=3, delay=2):
+def client(max_retries=3, delay=30):
     global _client
     for attempt in range(1, max_retries + 1):
         try:
             _client.futures_ping()
             return _client
-        except (BinanceAPIException, BinanceRequestException, Exception) as e:
-            _client = Client(requests_params={'proxies': proxies})
-            print(f"第 {attempt} 次尝试失败: {e}")
+        except:
+            print(f"第 {attempt} 次尝试失败")
             if attempt < max_retries:
                 time.sleep(delay)
+                try:
+                    _client = Client(requests_params={'proxies': proxies})
+                except:
+                    print('_client 创建失败')
             else:
                 raise BinanceRequestException("已达最大重试次数，Ping 失败")
 symbol = 'ETHUSDC'
@@ -99,9 +102,17 @@ def get_order_book():
     return OB(asks, bids, ts, price)
 
 
-with open(fp_p('ob',str(int(time.time()))), 'wb') as wf:
-    while True:
-        obo = get_order_book()
-        pickle.dump(obo, wf)
-        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(obo.ts // 1000)), obo.price)
-        time.sleep(10)
+while True:
+    i = 0
+    with open(fp_p('ob',str(int(time.time()))), 'wb') as wf:
+        while True:
+            try:
+                obo = get_order_book()
+            except:
+                continue
+            pickle.dump(obo, wf)
+            print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(obo.ts // 1000)), obo.price)
+            time.sleep(10)
+            i += 1
+            if i >= 1000:
+                break
